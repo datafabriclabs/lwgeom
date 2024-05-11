@@ -1,0 +1,3 @@
+[submodule "lwgeom-sys/postgis"]
+	path = lwgeom-sys/postgis
+	url = https://github.com/postgis/postgis.git

@@ -1,0 +1,42 @@
+--- postgis/configure.ac	2024-04-19 11:40:16.149864250 +0800
++++ configure.ac	2024-04-19 15:28:39.016251528 +0800
+@@ -1736,37 +1736,10 @@
+ 
+ dnl echo "TRANSLATIONS_MAKEFILE_LIST: ${TRANSLATIONS_MAKEFILE_LIST}"
+ 
+-AC_CONFIG_FILES([GNUmakefile
+-   extensions/Makefile
+-   extensions/postgis/Makefile
+-   extensions/postgis_topology/Makefile
+-   extensions/postgis_tiger_geocoder/Makefile
+-   $ADDRESS_STANDARDIZER_MAKEFILE_LIST
++AC_CONFIG_FILES([
+    liblwgeom/Makefile
+-   liblwgeom/cunit/Makefile
+    liblwgeom/liblwgeom.h
+-   libpgcommon/Makefile
+-   libpgcommon/cunit/Makefile
+-   postgis/Makefile
+-   postgis/sqldefines.h
+-   sfcgal/Makefile
+-   $SFCGAL_MAKEFILE_LIST
+-   loader/Makefile
+-   loader/cunit/Makefile
+-   topology/Makefile
+-   topology/test/Makefile
+-   regress/Makefile
+-   regress/core/Makefile
+-   regress/core/tests.mk
+-   regress/dumper/Makefile
+-   regress/loader/Makefile
+-   doc/Makefile
+-   doc/Makefile.comments
+-   $TRANSLATIONS_MAKEFILE_LIST
+-   doc/html/image_src/Makefile
+-   utils/Makefile
+-   $RT_MAKEFILE_LIST
+-   $DEPS_MAKEFILE_LIST])
++   deps/ryu/Makefile])
+ 
+ AC_OUTPUT
+ 

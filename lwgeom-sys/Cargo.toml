@@ -1,0 +1,43 @@
+[package]
+name = "lwgeom-sys"
+version = "0.0.7"
+edition = "2021"
+authors = ["xhwhis <hi@whis.me>"]
+description = "Low-level bindings for the PostGIS LWGEOM geometry library."
+keywords = ["postgis", "geometry", "geography", "lwgeom"]
+categories = ["api-bindings"]
+documentation = "https://docs.rs/lwgeom-sys"
+repository = "https://github.com/xhwhis/lwgeom"
+license = "GPL-2.0-or-later"
+links = "lwgeom"
+include = [
+  "/build.rs",
+  "/src/",
+  "/configure.ac",
+  "/GNUmakefile",
+  "/postgis_revision.h",
+  "/postgis/COPYING",
+  "/postgis/LICENSE.TXT",
+  "/postgis/autogen.sh",
+  "/postgis/postgis_config.h.in",
+  "/postgis/Version.config",
+  "/postgis/macros/",
+  "/postgis/deps/ryu/LICENSE*",
+  "/postgis/deps/ryu/Makefile.in",
+  "/postgis/deps/ryu/*.h",
+  "/postgis/deps/ryu/*.c",
+  "/postgis/liblwgeom/liblwgeom.h.in",
+  "/postgis/liblwgeom/lwin_wkt_lex.l",
+  "/postgis/liblwgeom/lwin_wkt_parse.y",
+  "/postgis/liblwgeom/Makefile.in",
+  "/postgis/liblwgeom/*.h",
+  "/postgis/liblwgeom/*.c",
+]
+
+[build-dependencies]
+bindgen = "0.69.4"
+glob = "0.3"
+pkg-config = "0.3"
+
+[dependencies]
+libc.workspace = true
