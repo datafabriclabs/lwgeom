@@ -40,11 +40,12 @@ mod tests {
     #[test]
     fn test_from_ewkb() {
         let result = LWGeom::from_ewkb(
-            LWGeom::from_text("LINESTRING(1 2, 3 4, 5 6)", None)
+            &LWGeom::from_text("LINESTRING(1 2, 3 4, 5 6)", None)
                 .unwrap()
                 .as_ewkb()
                 .unwrap(),
         )
+        .unwrap()
         .as_ewkt(None)
         .unwrap();
         assert_eq!(result, "LINESTRING(1 2,3 4,5 6)");

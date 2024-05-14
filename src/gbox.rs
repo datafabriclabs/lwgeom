@@ -27,8 +27,13 @@ impl GBox {
 
 impl fmt::Display for GBox {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let c_gbox_string = unsafe { CStr::from_ptr(gbox_to_string(self.as_ptr())) };
-        c_gbox_string.to_string_lossy().fmt(f)
+        let p_gbox_string = unsafe { gbox_to_string(self.as_ptr()) };
+        let c_gbox_string = unsafe { CStr::from_ptr(p_gbox_string) };
+        c_gbox_string.to_string_lossy().fmt(f)?;
+        unsafe {
+            lwfree(p_gbox_string.cast());
+        }
+        Ok(())
     }
 }
 
@@ -65,8 +70,13 @@ impl GBoxRef {
 
 impl fmt::Display for GBoxRef {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let c_gbox_string = unsafe { CStr::from_ptr(gbox_to_string(self.as_ptr())) };
-        c_gbox_string.to_string_lossy().fmt(f)
+        let p_gbox_string = unsafe { gbox_to_string(self.as_ptr()) };
+        let c_gbox_string = unsafe { CStr::from_ptr(p_gbox_string) };
+        c_gbox_string.to_string_lossy().fmt(f)?;
+        unsafe {
+            lwfree(p_gbox_string.cast());
+        }
+        Ok(())
     }
 }
 

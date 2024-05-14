@@ -104,11 +104,14 @@ impl LWGeom {
         Ok(parser_result.take_geom())
     }
 
-    pub fn from_ewkb(ewkb: &[u8]) -> Self {
+    pub fn from_ewkb(ewkb: &[u8]) -> Result<Self> {
         let p_geom =
             unsafe { lwgeom_from_wkb(ewkb.as_ptr(), ewkb.len(), LW_PARSER_CHECK_ALL as c_char) };
+        if p_geom.is_null() {
+            return Err(LWGeomError::NullPtrError);
+        }
 
-        Self::from_ptr(p_geom)
+        Ok(Self::from_ptr(p_geom))
     }
 }
 
@@ -118,13 +121,21 @@ impl LWGeom {
         let mut sz = MaybeUninit::uninit();
         let p_wkt =
             unsafe { lwgeom_to_wkt(self.as_ptr(), WKT_ISO as u8, precision, sz.as_mut_ptr()) };
+        if p_wkt.is_null() {
+            return Err(LWGeomError::NullPtrError);
+        }
+
         let c_wkt = unsafe {
             CStr::from_bytes_with_nul_unchecked(core::slice::from_raw_parts(
                 p_wkt.cast(),
                 sz.assume_init(),
             ))
         };
-        Ok(c_wkt.to_string_lossy().into_owned())
+        let text = c_wkt.to_string_lossy().into_owned();
+        unsafe {
+            lwfree(p_wkt.cast());
+        }
+        Ok(text)
     }
 
     pub fn as_ewkt(&self, precision: Option<i32>) -> Result<String> {
@@ -138,24 +149,39 @@ impl LWGeom {
                 sz.as_mut_ptr(),
             )
         };
+        if p_wkt.is_null() {
+            return Err(LWGeomError::NullPtrError);
+        }
+
         let c_wkt = unsafe {
             CStr::from_bytes_with_nul_unchecked(core::slice::from_raw_parts(
                 p_wkt.cast(),
                 sz.assume_init(),
             ))
         };
-        Ok(c_wkt.to_string_lossy().into_owned())
+        let ewkt = c_wkt.to_string_lossy().into_owned();
+        unsafe {
+            lwfree(p_wkt.cast());
+        }
+        Ok(ewkt)
     }
 
-    pub fn as_ewkb(&self) -> Result<&[u8]> {
-        // TODO: leak?
-        let varlena = unsafe { lwgeom_to_wkb_varlena(self.as_ptr(), WKB_EXTENDED as u8).as_ref() }
-            .ok_or(LWGeomError::NullPtrError)?;
+    pub fn as_ewkb(&self) -> Result<Vec<u8>> {
+        let p_varlena = unsafe { lwgeom_to_wkb_varlena(self.as_ptr(), WKB_EXTENDED as u8) };
+        if p_varlena.is_null() {
+            return Err(LWGeomError::NullPtrError);
+        }
 
-        let ewkb = unsafe {
-            core::slice::from_raw_parts(varlena.data.as_ptr().cast(), varlena.size as usize)
+        let ewkb_slice = unsafe {
+            core::slice::from_raw_parts(
+                (*p_varlena).data.as_ptr().cast(),
+                (*p_varlena).size as usize,
+            )
         };
-
+        let ewkb = ewkb_slice.to_vec();
+        unsafe {
+            lwfree(p_varlena.cast());
+        }
         Ok(ewkb)
     }
 }
