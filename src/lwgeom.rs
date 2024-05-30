@@ -22,7 +22,7 @@ impl LWGeom {
         Self(ptr)
     }
 
-    fn as_ptr(&self) -> *mut LWGEOM {
+    pub fn as_ptr(&self) -> *mut LWGEOM {
         self.0
     }
 }
@@ -216,9 +216,10 @@ impl LWGeom {
     pub fn tile_envelope(
         zoom: i32, x: i32, y: i32, bounds: Option<&LWGeom>, margin: Option<f64>,
     ) -> Result<Self> {
+        let bounds2 =   Self::from_ewkt("SRID=3857;LINESTRING(-20037508.342789 -20037508.342789,20037508.342789 20037508.342789)").unwrap() ;
         let bounds = match bounds {
             Some(bounds) => bounds,
-            None => &Self::from_ewkt("SRID=3857;LINESTRING(-20037508.342789 -20037508.342789,20037508.342789 20037508.342789)").unwrap(),
+            None => &bounds2,
         };
         let bbox = bounds.get_bbox_ref();
 

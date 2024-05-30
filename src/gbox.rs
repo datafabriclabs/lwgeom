@@ -16,7 +16,7 @@ impl GBox {
         GBox(ptr)
     }
 
-    fn as_ptr(&self) -> *mut GBOX {
+    pub fn as_ptr(&self) -> *mut GBOX {
         self.0
     }
 
