@@ -125,6 +125,12 @@ fn main() {
                 .to_string_lossy()
                 .into_owned(),
         )
+        .header(
+            liblwgeom_dst
+                .join("lwtree.h")
+                .to_string_lossy()
+                .into_owned(),
+        )
         .clang_arg(format!("-I{}", proj_lib.include_paths[0].display()))
         .ctypes_prefix("libc")
         .use_core()

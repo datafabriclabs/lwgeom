@@ -12,7 +12,7 @@ license = "Unlicense"
 
 [dependencies]
 # workspace dependencies
-lwgeom-sys = { path = "lwgeom-sys", version = "0.0.8" }
+lwgeom-sys = { path = "lwgeom-sys", version = "0.0.9" }
 
 # crates.io dependencies
 libc.workspace = true
