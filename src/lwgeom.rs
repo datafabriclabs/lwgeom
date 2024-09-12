@@ -22,7 +22,7 @@ impl LWGeom {
         Self(ptr)
     }
 
-    pub fn as_ptr(&self) -> *mut LWGEOM {
+    fn as_ptr(&self) -> *mut LWGEOM {
         self.0
     }
 }

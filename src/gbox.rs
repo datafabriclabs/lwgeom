@@ -13,10 +13,10 @@ impl GBox {
             !ptr.is_null(),
             "Attempted to create a GBox from a null pointer."
         );
-        GBox(ptr)
+        Self(ptr)
     }
 
-    pub fn as_ptr(&self) -> *mut GBOX {
+    fn as_ptr(&self) -> *mut GBOX {
         self.0
     }
 
