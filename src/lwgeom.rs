@@ -7,6 +7,7 @@ use std::marker::PhantomData;
 use libc::{c_char, c_int};
 use lwgeom_sys::*;
 
+use crate::lwcollection::LWCollectionRef;
 use crate::lwgeom_parser_result::LWGeomParserResult;
 use crate::lwpoly::LWPoly;
 use crate::{GBoxRef, LWGeomError, Result};
@@ -22,8 +23,12 @@ impl LWGeom {
         Self(ptr)
     }
 
-    fn as_ptr(&self) -> *mut LWGEOM {
+    pub fn as_ptr(&self) -> *mut LWGEOM {
         self.0
+    }
+
+    pub fn as_ref(&self) -> &LWGEOM {
+        unsafe { &*self.as_ptr().cast_const() }
     }
 }
 
@@ -49,6 +54,10 @@ impl LWGeomRef {
 
     fn as_ptr(&self) -> *mut LWGEOM {
         self as *const _ as *mut _
+    }
+
+    pub fn as_ref(&self) -> &LWGEOM {
+        unsafe { &*self.as_ptr().cast_const() }
     }
 }
 
@@ -307,5 +316,19 @@ impl LWGeomRef {
     pub fn get_bbox_ref(&self) -> &GBoxRef {
         let p_bbox = unsafe { lwgeom_get_bbox(self.as_ptr()) };
         GBoxRef::from_ptr(p_bbox.cast_mut())
+    }
+}
+
+impl LWGeom {
+    pub fn as_lwcollection(&self) -> &LWCollectionRef {
+        let p_collection = unsafe { lwgeom_as_lwcollection(self.as_ptr()) };
+        LWCollectionRef::from_ptr(p_collection)
+    }
+}
+
+impl LWGeomRef {
+    pub fn as_lwcollection(&self) -> &LWCollectionRef {
+        let p_collection = unsafe { lwgeom_as_lwcollection(self.as_ptr()) };
+        LWCollectionRef::from_ptr(p_collection)
     }
 }

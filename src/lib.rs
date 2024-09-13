@@ -1,12 +1,12 @@
 mod affine;
 mod error;
 mod gbox;
+mod lwcollection;
 mod lwgeom;
 mod lwgeom_parser_result;
 mod lwpoly;
 mod mvt;
 
-pub use affine::Affine;
 pub use error::{LWGeomError, Result};
 pub use gbox::{GBox, GBoxRef};
 pub use lwgeom::{LWGeom, LWGeomRef};

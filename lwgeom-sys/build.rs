@@ -134,6 +134,7 @@ fn main() {
         .clang_arg(format!("-I{}", proj_lib.include_paths[0].display()))
         .ctypes_prefix("libc")
         .use_core()
+        .wrap_static_fns(true)
         .generate()
         .expect("Unable to generate bindings");
 
