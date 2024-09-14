@@ -1,6 +1,7 @@
 mod affine;
 mod error;
 mod gbox;
+mod grid_spec;
 mod lwcollection;
 mod lwgeom;
 mod lwgeom_parser_result;
@@ -8,7 +9,7 @@ mod lwpoly;
 mod mvt;
 
 pub use error::{LWGeomError, Result};
-pub use gbox::{GBox, GBoxRef};
+pub use gbox::GBox;
 pub use lwgeom::{LWGeom, LWGeomRef};
 
 #[cfg(test)]
@@ -35,7 +36,7 @@ mod tests {
     fn test_box2d() {
         let result = LWGeom::from_text("LINESTRING(1 2, 3 4, 5 6)", None)
             .unwrap()
-            .get_bbox_ref()
+            .calculate_bbox()
             .to_string();
         assert_eq!(result, "GBOX((1,2),(5,6))");
     }

@@ -4,10 +4,10 @@ use lwgeom_sys::*;
 
 use crate::LWGeom;
 
-pub(crate) struct LWGeomParserResult(*mut LWGEOM_PARSER_RESULT);
+pub struct LWGeomParserResult(*mut LWGEOM_PARSER_RESULT);
 
 impl LWGeomParserResult {
-    pub fn from_ptr(ptr: *mut LWGEOM_PARSER_RESULT) -> Self {
+    pub(crate) fn from_ptr(ptr: *mut LWGEOM_PARSER_RESULT) -> Self {
         debug_assert!(
             !ptr.is_null(),
             "Attempted to create a LWGeomParserResult from a null pointer."
@@ -15,16 +15,20 @@ impl LWGeomParserResult {
         Self(ptr)
     }
 
-    pub fn as_ptr(&self) -> *mut LWGEOM_PARSER_RESULT {
+    pub(crate) fn as_mut_ptr(&mut self) -> *mut LWGEOM_PARSER_RESULT {
         self.0
     }
 
-    fn as_ref(&self) -> &LWGEOM_PARSER_RESULT {
-        unsafe { &*self.as_ptr().cast_const() }
+    pub(crate) fn as_ptr(&self) -> *const LWGEOM_PARSER_RESULT {
+        self.0.cast_const()
     }
 
-    fn as_mut_ref(&mut self) -> &mut LWGEOM_PARSER_RESULT {
-        unsafe { &mut *self.as_ptr() }
+    pub(crate) fn as_ref(&self) -> &LWGEOM_PARSER_RESULT {
+        unsafe { &*self.as_ptr() }
+    }
+
+    pub(crate) fn as_mut_ref(&mut self) -> &mut LWGEOM_PARSER_RESULT {
+        unsafe { &mut *self.as_mut_ptr() }
     }
 }
 
@@ -33,7 +37,7 @@ unsafe impl Sync for LWGeomParserResult {}
 
 impl Drop for LWGeomParserResult {
     fn drop(&mut self) {
-        unsafe { lwgeom_parser_result_free(self.as_ptr()) }
+        unsafe { lwgeom_parser_result_free(self.as_mut_ptr()) }
     }
 }
 

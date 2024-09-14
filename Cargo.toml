@@ -7,7 +7,7 @@ description = "Rust bindings for the PostGIS LWGEOM geometry library."
 keywords = ["postgis", "geometry", "geography", "lwgeom"]
 categories = ["api-bindings"]
 documentation = "https://docs.rs/lwgeom"
-repository = "https://github.com/xhwhis/lwgeom"
+repository = "https://github.com/datafabriclabs/lwgeom"
 license = "Unlicense"
 
 [dependencies]

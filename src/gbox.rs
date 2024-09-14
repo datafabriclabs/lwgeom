@@ -1,14 +1,12 @@
-use core::cell::UnsafeCell;
 use core::ffi::CStr;
 use core::fmt;
-use core::marker::PhantomData;
 
 use lwgeom_sys::*;
 
 pub struct GBox(*mut GBOX);
 
 impl GBox {
-    pub fn from_ptr(ptr: *mut GBOX) -> Self {
+    pub(crate) fn from_ptr(ptr: *mut GBOX) -> Self {
         debug_assert!(
             !ptr.is_null(),
             "Attempted to create a GBox from a null pointer."
@@ -16,12 +14,34 @@ impl GBox {
         Self(ptr)
     }
 
-    fn as_ptr(&self) -> *mut GBOX {
+    pub(crate) fn as_mut_ptr(&mut self) -> *mut GBOX {
         self.0
     }
 
-    fn as_ref(&self) -> &GBOX {
-        unsafe { &*self.as_ptr().cast_const() }
+    pub(crate) fn as_ptr(&self) -> *const GBOX {
+        self.0.cast_const()
+    }
+
+    pub(crate) fn as_ref(&self) -> &GBOX {
+        unsafe { &*self.as_ptr() }
+    }
+}
+
+impl GBox {
+    pub fn new_bbox() -> Self {
+        let ffi_gbox = Box::new(GBOX {
+            flags: LWFLAG_BBOX as u16,
+            xmin: 0.0,
+            xmax: 0.0,
+            ymin: 0.0,
+            ymax: 0.0,
+            zmin: 0.0,
+            zmax: 0.0,
+            mmin: 0.0,
+            mmax: 0.0,
+        });
+        let ptr = Box::into_raw(ffi_gbox);
+        Self::from_ptr(ptr)
     }
 }
 
@@ -42,66 +62,11 @@ unsafe impl Sync for GBox {}
 
 impl Drop for GBox {
     fn drop(&mut self) {
-        unsafe {
-            lwfree(self.as_ptr().cast());
-        }
+        unsafe { drop(Box::from_raw(self.as_mut_ptr())) }
     }
 }
-
-pub struct GBoxRef(PhantomData<UnsafeCell<*mut GBOX>>);
-
-impl GBoxRef {
-    pub fn from_ptr<'a>(ptr: *mut GBOX) -> &'a Self {
-        debug_assert!(
-            !ptr.is_null(),
-            "Attempted to create a GBoxRef from a null pointer."
-        );
-        unsafe { &*(ptr as *mut _) }
-    }
-
-    fn as_ptr(&self) -> *mut GBOX {
-        self as *const _ as *mut _
-    }
-
-    fn as_ref(&self) -> &GBOX {
-        unsafe { &*self.as_ptr().cast_const() }
-    }
-}
-
-impl fmt::Display for GBoxRef {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let p_gbox_string = unsafe { gbox_to_string(self.as_ptr()) };
-        let c_gbox_string = unsafe { CStr::from_ptr(p_gbox_string) };
-        c_gbox_string.to_string_lossy().fmt(f)?;
-        unsafe {
-            lwfree(p_gbox_string.cast());
-        }
-        Ok(())
-    }
-}
-
-unsafe impl Send for GBoxRef {}
-unsafe impl Sync for GBoxRef {}
 
 impl GBox {
-    pub fn xmin(&self) -> f64 {
-        self.as_ref().xmin
-    }
-
-    pub fn xmax(&self) -> f64 {
-        self.as_ref().xmax
-    }
-
-    pub fn ymin(&self) -> f64 {
-        self.as_ref().ymin
-    }
-
-    pub fn ymax(&self) -> f64 {
-        self.as_ref().ymax
-    }
-}
-
-impl GBoxRef {
     pub fn xmin(&self) -> f64 {
         self.as_ref().xmin
     }

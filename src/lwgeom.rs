@@ -10,12 +10,12 @@ use lwgeom_sys::*;
 use crate::lwcollection::LWCollectionRef;
 use crate::lwgeom_parser_result::LWGeomParserResult;
 use crate::lwpoly::LWPoly;
-use crate::{GBoxRef, LWGeomError, Result};
+use crate::{GBox, LWGeomError, Result};
 
 pub struct LWGeom(*mut LWGEOM);
 
 impl LWGeom {
-    pub fn from_ptr(ptr: *mut LWGEOM) -> Self {
+    pub(crate) fn from_ptr(ptr: *mut LWGEOM) -> Self {
         debug_assert!(
             !ptr.is_null(),
             "Attempted to create a LWGeom from a null pointer."
@@ -23,12 +23,16 @@ impl LWGeom {
         Self(ptr)
     }
 
-    pub fn as_ptr(&self) -> *mut LWGEOM {
+    pub(crate) fn as_mut_ptr(&mut self) -> *mut LWGEOM {
         self.0
     }
 
-    pub fn as_ref(&self) -> &LWGEOM {
-        unsafe { &*self.as_ptr().cast_const() }
+    pub(crate) fn as_ptr(&self) -> *const LWGEOM {
+        self.0.cast_const()
+    }
+
+    pub(crate) fn as_ref(&self) -> &LWGEOM {
+        unsafe { &*self.as_ptr() }
     }
 }
 
@@ -37,27 +41,39 @@ unsafe impl Sync for LWGeom {}
 
 impl Drop for LWGeom {
     fn drop(&mut self) {
-        unsafe { lwgeom_free(self.as_ptr()) }
+        unsafe { lwgeom_free(self.as_mut_ptr()) }
     }
 }
 
-pub struct LWGeomRef(PhantomData<UnsafeCell<*mut LWGEOM>>);
+pub struct LWGeomRef(PhantomData<UnsafeCell<()>>);
 
 impl LWGeomRef {
-    pub fn from_ptr<'a>(ptr: *mut LWGEOM) -> &'a Self {
+    pub(crate) fn from_ptr<'a>(ptr: *const LWGEOM) -> &'a Self {
         debug_assert!(
             !ptr.is_null(),
             "Attempted to create a LWGeomRef from a null pointer."
         );
-        unsafe { &*(ptr as *mut _) }
+        unsafe { &*(ptr as *const _) }
     }
 
-    fn as_ptr(&self) -> *mut LWGEOM {
-        self as *const _ as *mut _
+    pub(crate) fn from_mut_ptr<'a>(ptr: *mut LWGEOM) -> &'a mut Self {
+        debug_assert!(
+            !ptr.is_null(),
+            "Attempted to create a mutable LWGeomRef from a null pointer."
+        );
+        unsafe { &mut *(ptr as *mut _) }
     }
 
-    pub fn as_ref(&self) -> &LWGEOM {
-        unsafe { &*self.as_ptr().cast_const() }
+    pub(crate) fn as_mut_ptr(&mut self) -> *mut LWGEOM {
+        self as *const _ as _
+    }
+
+    pub(crate) fn as_ptr(&self) -> *const LWGEOM {
+        self as *const _ as _
+    }
+
+    pub(crate) fn as_ref(&self) -> &LWGEOM {
+        unsafe { &*self.as_ptr() }
     }
 }
 
@@ -209,7 +225,7 @@ impl LWGeom {
     }
 
     pub fn set_srid(&mut self, srid: i32) {
-        unsafe { lwgeom_set_srid(self.as_ptr(), srid) }
+        unsafe { lwgeom_set_srid(self.as_mut_ptr(), srid) }
     }
 
     pub fn split(&self, blade: &LWGeom) -> Self {
@@ -217,20 +233,20 @@ impl LWGeom {
         Self::from_ptr(p_geom)
     }
 
-    pub fn get_bbox_ref(&self) -> &GBoxRef {
-        let p_bbox = unsafe { lwgeom_get_bbox(self.as_ptr()) };
-        GBoxRef::from_ptr(p_bbox.cast_mut())
+    pub fn calculate_bbox(&self) -> GBox {
+        let mut bbox = GBox::new_bbox();
+        unsafe { lwgeom_calculate_gbox(self.as_ptr(), bbox.as_mut_ptr()) };
+        bbox
     }
 
     pub fn tile_envelope(
         zoom: i32, x: i32, y: i32, bounds: Option<&LWGeom>, margin: Option<f64>,
     ) -> Result<Self> {
-        let bounds2 =   Self::from_ewkt("SRID=3857;LINESTRING(-20037508.342789 -20037508.342789,20037508.342789 20037508.342789)").unwrap() ;
         let bounds = match bounds {
             Some(bounds) => bounds,
-            None => &bounds2,
+            None => &Self::from_ewkt("SRID=3857;LINESTRING(-20037508.342789 -20037508.342789,20037508.342789 20037508.342789)").unwrap(),
         };
-        let bbox = bounds.get_bbox_ref();
+        let bbox = bounds.calculate_bbox();
 
         let srid = bounds.get_srid().unwrap_or(3857);
 
@@ -310,12 +326,13 @@ impl LWGeomRef {
     }
 
     pub fn set_srid(&mut self, srid: i32) {
-        unsafe { lwgeom_set_srid(self.as_ptr(), srid) }
+        unsafe { lwgeom_set_srid(self.as_mut_ptr(), srid) }
     }
 
-    pub fn get_bbox_ref(&self) -> &GBoxRef {
-        let p_bbox = unsafe { lwgeom_get_bbox(self.as_ptr()) };
-        GBoxRef::from_ptr(p_bbox.cast_mut())
+    pub fn calculate_bbox(&self) -> GBox {
+        let mut bbox = GBox::new_bbox();
+        unsafe { lwgeom_calculate_gbox(self.as_ptr(), bbox.as_mut_ptr()) };
+        bbox
     }
 }
 
@@ -323,6 +340,10 @@ impl LWGeom {
     pub fn as_lwcollection(&self) -> &LWCollectionRef {
         let p_collection = unsafe { lwgeom_as_lwcollection(self.as_ptr()) };
         LWCollectionRef::from_ptr(p_collection)
+    }
+
+    pub fn get_type(&self) -> u32 {
+        unsafe { lwgeom_get_type(self.as_ptr()) }
     }
 }
 

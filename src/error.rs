@@ -16,4 +16,6 @@ pub enum LWGeomError {
     WKTParseError(String),
     #[error("failed to call function `{0}`, but no error message returned")]
     FailedWithoutMessageError(String),
+    #[error("invalid geometry basic type: {0}")]
+    InvalidGeomtryBasicType(u32),
 }

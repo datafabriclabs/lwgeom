@@ -5,7 +5,7 @@ use crate::LWGeom;
 pub struct LWPoly(*mut LWPOLY);
 
 impl LWPoly {
-    pub fn from_ptr(ptr: *mut LWPOLY) -> Self {
+    pub(crate) fn from_ptr(ptr: *mut LWPOLY) -> Self {
         debug_assert!(
             !ptr.is_null(),
             "Attempted to create a LWPoly from a null pointer."
@@ -13,11 +13,11 @@ impl LWPoly {
         Self(ptr)
     }
 
-    fn as_ptr(&self) -> *mut LWPOLY {
+    pub(crate) fn as_ptr(&self) -> *mut LWPOLY {
         self.0
     }
 
-    fn into_ptr(self) -> *mut LWPOLY {
+    pub(crate) fn into_ptr(self) -> *mut LWPOLY {
         let ptr = self.0;
         core::mem::forget(self);
         ptr
