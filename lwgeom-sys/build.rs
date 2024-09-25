@@ -16,6 +16,15 @@ fn run(cmd: &mut Command) {
 
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
+    println!("cargo:rerun-if-changed=configure.ac");
+    println!("cargo:rerun-if-changed=GNUmakefile");
+    println!("cargo:rerun-if-changed=postgis_revision.h");
+    println!("cargo:rerun-if-changed=postgis");
+    #[cfg(feature = "mvt")]
+    {
+        println!("cargo:rerun-if-changed=mvt.h");
+        println!("cargo:rerun-if-changed=mvt.c");
+    }
 
     let src = PathBuf::from(std::env::var_os("CARGO_MANIFEST_DIR").unwrap());
     let dst = PathBuf::from(std::env::var_os("OUT_DIR").unwrap());
@@ -90,7 +99,7 @@ fn main() {
 
     println!(
         "cargo:rustc-link-search=native={}",
-        postgis_dst.join("liblwgeom/.libs").display()
+        liblwgeom_dst.join(".libs").display()
     );
     println!("cargo:rustc-link-lib=static=lwgeom");
 
@@ -112,7 +121,45 @@ fn main() {
     );
     println!("cargo:rustc-link-lib=geos_c");
 
-    let bindings = bindgen::Builder::default()
+    #[cfg(feature = "mvt")]
+    {
+        let wagyu_dst = postgis_dst.join("deps/wagyu/include/mapbox/geometry/wagyu");
+        if !wagyu_dst.exists() {
+            std::fs::create_dir_all(&wagyu_dst).expect("failed to create directory");
+        }
+
+        for pattern in [
+            "postgis/deps/wagyu/*.h",
+            "postgis/deps/wagyu/*.cpp",
+            "postgis/deps/wagyu/include/mapbox/*.hpp",
+            "postgis/deps/wagyu/include/mapbox/geometry/*.hpp",
+            "postgis/deps/wagyu/include/mapbox/geometry/wagyu/*.hpp",
+        ] {
+            for entry in glob::glob(pattern).unwrap() {
+                let path = entry.unwrap();
+                symlink_file(src.join(&path), dst.join(&path));
+            }
+        }
+
+        for path in ["mvt.h", "mvt.c"] {
+            symlink_file(src.join(path), liblwgeom_dst.join(path));
+        }
+
+        cc::Build::new()
+            .cpp(true)
+            .file(postgis_dst.join("deps/wagyu/lwgeom_wagyu.cpp"))
+            .include(&liblwgeom_dst)
+            .include(postgis_dst.join("deps/wagyu/include"))
+            .compile("lwgeom_wagyu");
+        cc::Build::new()
+            .file(liblwgeom_dst.join("mvt.c"))
+            .include(&liblwgeom_dst)
+            .include(postgis_dst.join("deps/wagyu"))
+            .flag("-Wno-unused-parameter")
+            .compile("lwgeom_mvt");
+    }
+
+    let builder = bindgen::Builder::default()
         .header(
             liblwgeom_dst
                 .join("liblwgeom.h")
@@ -130,7 +177,12 @@ fn main() {
                 .join("lwtree.h")
                 .to_string_lossy()
                 .into_owned(),
-        )
+        );
+
+    #[cfg(feature = "mvt")]
+    let builder = builder.header(liblwgeom_dst.join("mvt.h").to_string_lossy().into_owned());
+
+    let bindings = builder
         .clang_arg(format!("-I{}", proj_lib.include_paths[0].display()))
         .ctypes_prefix("libc")
         .use_core()

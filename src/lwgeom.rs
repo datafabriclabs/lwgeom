@@ -1,12 +1,11 @@
 use core::ffi::CStr;
 use core::mem::MaybeUninit;
-use std::cell::UnsafeCell;
 use std::ffi::CString;
-use std::marker::PhantomData;
 
 use libc::{c_char, c_int};
 use lwgeom_sys::*;
 
+use crate::foreign_type::{ForeignType, ForeignTypeRef, Opaque};
 use crate::lwcollection::LWCollectionRef;
 use crate::lwgeom_parser_result::LWGeomParserResult;
 use crate::lwpoly::LWPoly;
@@ -14,8 +13,10 @@ use crate::{GBox, LWGeomError, Result};
 
 pub struct LWGeom(*mut LWGEOM);
 
-impl LWGeom {
-    pub(crate) fn from_ptr(ptr: *mut LWGEOM) -> Self {
+impl ForeignType for LWGeom {
+    type FFIType = LWGEOM;
+
+    fn from_ptr(ptr: *mut Self::FFIType) -> Self {
         debug_assert!(
             !ptr.is_null(),
             "Attempted to create a LWGeom from a null pointer."
@@ -23,16 +24,12 @@ impl LWGeom {
         Self(ptr)
     }
 
-    pub(crate) fn as_mut_ptr(&mut self) -> *mut LWGEOM {
+    fn as_mut_ptr(&mut self) -> *mut Self::FFIType {
         self.0
     }
 
-    pub(crate) fn as_ptr(&self) -> *const LWGEOM {
+    fn as_ptr(&self) -> *const Self::FFIType {
         self.0.cast_const()
-    }
-
-    pub(crate) fn as_ref(&self) -> &LWGEOM {
-        unsafe { &*self.as_ptr() }
     }
 }
 
@@ -45,36 +42,10 @@ impl Drop for LWGeom {
     }
 }
 
-pub struct LWGeomRef(PhantomData<UnsafeCell<()>>);
+pub struct LWGeomRef(Opaque);
 
-impl LWGeomRef {
-    pub(crate) fn from_ptr<'a>(ptr: *const LWGEOM) -> &'a Self {
-        debug_assert!(
-            !ptr.is_null(),
-            "Attempted to create a LWGeomRef from a null pointer."
-        );
-        unsafe { &*(ptr as *const _) }
-    }
-
-    pub(crate) fn from_mut_ptr<'a>(ptr: *mut LWGEOM) -> &'a mut Self {
-        debug_assert!(
-            !ptr.is_null(),
-            "Attempted to create a mutable LWGeomRef from a null pointer."
-        );
-        unsafe { &mut *(ptr as *mut _) }
-    }
-
-    pub(crate) fn as_mut_ptr(&mut self) -> *mut LWGEOM {
-        self as *const _ as _
-    }
-
-    pub(crate) fn as_ptr(&self) -> *const LWGEOM {
-        self as *const _ as _
-    }
-
-    pub(crate) fn as_ref(&self) -> &LWGEOM {
-        unsafe { &*self.as_ptr() }
-    }
+impl ForeignTypeRef for LWGeomRef {
+    type FFIType = LWGEOM;
 }
 
 unsafe impl Send for LWGeomRef {}
@@ -345,11 +316,35 @@ impl LWGeom {
     pub fn get_type(&self) -> u32 {
         unsafe { lwgeom_get_type(self.as_ptr()) }
     }
+
+    pub fn is_collection(&self) -> bool {
+        unsafe { lwgeom_is_collection(self.as_ptr()) != LW_FALSE as c_int }
+    }
 }
 
 impl LWGeomRef {
     pub fn as_lwcollection(&self) -> &LWCollectionRef {
         let p_collection = unsafe { lwgeom_as_lwcollection(self.as_ptr()) };
         LWCollectionRef::from_ptr(p_collection)
+    }
+
+    pub fn get_type(&self) -> u32 {
+        unsafe { lwgeom_get_type(self.as_ptr()) }
+    }
+
+    pub fn is_collection(&self) -> bool {
+        unsafe { lwgeom_is_collection(self.as_ptr()) != LW_FALSE as c_int }
+    }
+}
+
+impl LWGeom {
+    pub fn is_empty(&self) -> bool {
+        unsafe { lwgeom_is_empty(self.as_ptr()) != LW_FALSE as c_int }
+    }
+}
+
+impl LWGeomRef {
+    pub fn is_empty(&self) -> bool {
+        unsafe { lwgeom_is_empty(self.as_ptr()) != LW_FALSE as c_int }
     }
 }

@@ -3,11 +3,14 @@ use core::ffi::CStr;
 use lwgeom_sys::*;
 
 use crate::LWGeom;
+use crate::foreign_type::ForeignType;
 
 pub struct LWGeomParserResult(*mut LWGEOM_PARSER_RESULT);
 
-impl LWGeomParserResult {
-    pub(crate) fn from_ptr(ptr: *mut LWGEOM_PARSER_RESULT) -> Self {
+impl ForeignType for LWGeomParserResult {
+    type FFIType = LWGEOM_PARSER_RESULT;
+
+    fn from_ptr(ptr: *mut Self::FFIType) -> Self {
         debug_assert!(
             !ptr.is_null(),
             "Attempted to create a LWGeomParserResult from a null pointer."
@@ -15,20 +18,12 @@ impl LWGeomParserResult {
         Self(ptr)
     }
 
-    pub(crate) fn as_mut_ptr(&mut self) -> *mut LWGEOM_PARSER_RESULT {
+    fn as_mut_ptr(&mut self) -> *mut Self::FFIType {
         self.0
     }
 
-    pub(crate) fn as_ptr(&self) -> *const LWGEOM_PARSER_RESULT {
+    fn as_ptr(&self) -> *const Self::FFIType {
         self.0.cast_const()
-    }
-
-    pub(crate) fn as_ref(&self) -> &LWGEOM_PARSER_RESULT {
-        unsafe { &*self.as_ptr() }
-    }
-
-    pub(crate) fn as_mut_ref(&mut self) -> &mut LWGEOM_PARSER_RESULT {
-        unsafe { &mut *self.as_mut_ptr() }
     }
 }
 

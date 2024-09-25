@@ -1,11 +1,14 @@
 use lwgeom_sys::*;
 
 use crate::LWGeom;
+use crate::foreign_type::ForeignType;
 
 pub struct LWPoly(*mut LWPOLY);
 
-impl LWPoly {
-    pub(crate) fn from_ptr(ptr: *mut LWPOLY) -> Self {
+impl ForeignType for LWPoly {
+    type FFIType = LWPOLY;
+
+    fn from_ptr(ptr: *mut Self::FFIType) -> Self {
         debug_assert!(
             !ptr.is_null(),
             "Attempted to create a LWPoly from a null pointer."
@@ -13,14 +16,12 @@ impl LWPoly {
         Self(ptr)
     }
 
-    pub(crate) fn as_ptr(&self) -> *mut LWPOLY {
+    fn as_mut_ptr(&mut self) -> *mut Self::FFIType {
         self.0
     }
 
-    pub(crate) fn into_ptr(self) -> *mut LWPOLY {
-        let ptr = self.0;
-        core::mem::forget(self);
-        ptr
+    fn as_ptr(&self) -> *const Self::FFIType {
+        self.0.cast_const()
     }
 }
 
@@ -29,7 +30,7 @@ unsafe impl Sync for LWPoly {}
 
 impl Drop for LWPoly {
     fn drop(&mut self) {
-        unsafe { lwpoly_free(self.as_ptr()) };
+        unsafe { lwpoly_free(self.as_mut_ptr()) };
     }
 }
 

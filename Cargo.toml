@@ -10,6 +10,9 @@ documentation = "https://docs.rs/lwgeom"
 repository = "https://github.com/datafabriclabs/lwgeom"
 license = "Unlicense"
 
+[features]
+mvt = ["lwgeom-sys/mvt"]
+
 [dependencies]
 # workspace dependencies
 lwgeom-sys = { path = "lwgeom-sys", version = "0.0.10" }

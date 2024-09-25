@@ -1,14 +1,14 @@
-use std::cell::UnsafeCell;
-use std::marker::PhantomData;
-
 use lwgeom_sys::*;
 
-use crate::LWGeom;
+use crate::foreign_type::{ForeignType, ForeignTypeRef, Opaque};
+use crate::{LWGeom, LWGeomRef};
 
 pub struct LWCollection(*mut LWCOLLECTION);
 
-impl LWCollection {
-    pub(crate) fn from_ptr(ptr: *mut LWCOLLECTION) -> Self {
+impl ForeignType for LWCollection {
+    type FFIType = LWCOLLECTION;
+
+    fn from_ptr(ptr: *mut Self::FFIType) -> Self {
         debug_assert!(
             !ptr.is_null(),
             "Attempted to create a LWCollection from a null pointer."
@@ -16,22 +16,12 @@ impl LWCollection {
         Self(ptr)
     }
 
-    pub(crate) fn as_mut_ptr(&mut self) -> *mut LWCOLLECTION {
+    fn as_mut_ptr(&mut self) -> *mut Self::FFIType {
         self.0
     }
 
-    pub(crate) fn as_ptr(&self) -> *const LWCOLLECTION {
+    fn as_ptr(&self) -> *const Self::FFIType {
         self.0.cast_const()
-    }
-
-    pub(crate) fn into_ptr(self) -> *mut LWCOLLECTION {
-        let ptr = self.0;
-        core::mem::forget(self);
-        ptr
-    }
-
-    pub(crate) fn as_ref(&self) -> &LWCOLLECTION {
-        unsafe { &*self.as_ptr() }
     }
 }
 
@@ -44,36 +34,10 @@ impl Drop for LWCollection {
     }
 }
 
-pub struct LWCollectionRef(PhantomData<UnsafeCell<()>>);
+pub struct LWCollectionRef(Opaque);
 
-impl LWCollectionRef {
-    pub(crate) fn from_ptr<'a>(ptr: *const LWCOLLECTION) -> &'a Self {
-        debug_assert!(
-            !ptr.is_null(),
-            "Attempted to create a LWCollectionRef from a null pointer."
-        );
-        unsafe { &*(ptr as *const _) }
-    }
-
-    pub(crate) fn from_mut_ptr<'a>(ptr: *mut LWCOLLECTION) -> &'a mut Self {
-        debug_assert!(
-            !ptr.is_null(),
-            "Attempted to create a mutable LWCollectionRef from a null pointer."
-        );
-        unsafe { &mut *(ptr as *mut _) }
-    }
-
-    pub(crate) fn as_mut_ptr(&mut self) -> *mut LWCOLLECTION {
-        self as *const _ as _
-    }
-
-    pub(crate) fn as_ptr(&self) -> *const LWCOLLECTION {
-        self as *const _ as _
-    }
-
-    pub(crate) fn as_ref(&self) -> &LWCOLLECTION {
-        unsafe { &*self.as_ptr() }
-    }
+impl ForeignTypeRef for LWCollectionRef {
+    type FFIType = LWCOLLECTION;
 }
 
 unsafe impl Send for LWCollectionRef {}
@@ -83,6 +47,11 @@ impl LWCollection {
     pub fn into_lwgeom(self) -> LWGeom {
         let p_geom = unsafe { lwcollection_as_lwgeom(self.into_ptr()) };
         LWGeom::from_ptr(p_geom)
+    }
+
+    pub fn as_lwgeom(&self) -> &LWGeomRef {
+        let p_geom = unsafe { lwcollection_as_lwgeom(self.as_ptr()) };
+        LWGeomRef::from_ptr(p_geom)
     }
 }
 

@@ -15,6 +15,8 @@ include = [
   "/src/",
   "/configure.ac",
   "/GNUmakefile",
+  "/mvt.h",
+  "/mvt.c",
   "/postgis_revision.h",
   "/postgis/COPYING",
   "/postgis/LICENSE.TXT",
@@ -26,6 +28,12 @@ include = [
   "/postgis/deps/ryu/Makefile.in",
   "/postgis/deps/ryu/*.h",
   "/postgis/deps/ryu/*.c",
+  "/postgis/deps/wagyu/LICENSE*",
+  "/postgis/deps/wagyu/*.h",
+  "/postgis/deps/wagyu/*.cpp",
+  "/postgis/deps/wagyu/include/mapbox/*.hpp",
+  "/postgis/deps/wagyu/include/mapbox/geometry/*.hpp",
+  "/postgis/deps/wagyu/include/mapbox/geometry/wagyu/*.hpp",
   "/postgis/liblwgeom/liblwgeom.h.in",
   "/postgis/liblwgeom/lwin_wkt_lex.l",
   "/postgis/liblwgeom/lwin_wkt_parse.y",
@@ -34,8 +42,12 @@ include = [
   "/postgis/liblwgeom/*.c",
 ]
 
+[features]
+mvt = ["cc"]
+
 [build-dependencies]
 bindgen = { version = "0.70", features = ["experimental"] }
+cc = { version = "1.1", optional = true, features = ["parallel"] }
 glob = "0.3"
 pkg-config = "0.3"
 

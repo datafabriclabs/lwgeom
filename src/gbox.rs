@@ -3,10 +3,14 @@ use core::fmt;
 
 use lwgeom_sys::*;
 
+use crate::foreign_type::ForeignType;
+
 pub struct GBox(*mut GBOX);
 
-impl GBox {
-    pub(crate) fn from_ptr(ptr: *mut GBOX) -> Self {
+impl ForeignType for GBox {
+    type FFIType = GBOX;
+
+    fn from_ptr(ptr: *mut Self::FFIType) -> Self {
         debug_assert!(
             !ptr.is_null(),
             "Attempted to create a GBox from a null pointer."
@@ -14,16 +18,12 @@ impl GBox {
         Self(ptr)
     }
 
-    pub(crate) fn as_mut_ptr(&mut self) -> *mut GBOX {
+    fn as_mut_ptr(&mut self) -> *mut Self::FFIType {
         self.0
     }
 
-    pub(crate) fn as_ptr(&self) -> *const GBOX {
+    fn as_ptr(&self) -> *const Self::FFIType {
         self.0.cast_const()
-    }
-
-    pub(crate) fn as_ref(&self) -> &GBOX {
-        unsafe { &*self.as_ptr() }
     }
 }
 
@@ -35,6 +35,22 @@ impl GBox {
             xmax: 0.0,
             ymin: 0.0,
             ymax: 0.0,
+            zmin: 0.0,
+            zmax: 0.0,
+            mmin: 0.0,
+            mmax: 0.0,
+        });
+        let ptr = Box::into_raw(ffi_gbox);
+        Self::from_ptr(ptr)
+    }
+
+    pub fn make_box(low_left: (f64, f64), up_right: (f64, f64)) -> Self {
+        let ffi_gbox = Box::new(GBOX {
+            flags: 0,
+            xmin: low_left.0,
+            xmax: up_right.0,
+            ymin: low_left.1,
+            ymax: up_right.1,
             zmin: 0.0,
             zmax: 0.0,
             mmin: 0.0,

@@ -1,11 +1,11 @@
-mod affine;
 mod error;
+mod foreign_type;
 mod gbox;
-mod grid_spec;
 mod lwcollection;
 mod lwgeom;
 mod lwgeom_parser_result;
 mod lwpoly;
+#[cfg(feature = "mvt")]
 mod mvt;
 
 pub use error::{LWGeomError, Result};
@@ -64,6 +64,26 @@ mod tests {
         assert_eq!(
             result,
             "POLYGON((-10018754.1713945 0,-10018754.1713945 10018754.1713945,0 10018754.1713945,0 0,-10018754.1713945 0))"
+        );
+    }
+
+    #[cfg(feature = "mvt")]
+    #[test]
+    fn test_as_mvt_geom() {
+        let result = LWGeom::from_ewkt("POLYGON((0 0,10 0,10 5,0 -5,0 0))")
+            .unwrap()
+            .as_mvt_geom(
+                &GBox::make_box((0.0, 0.0), (4096.0, 4096.0)),
+                4096,
+                0,
+                false,
+            )
+            .unwrap()
+            .as_text(None)
+            .unwrap();
+        assert_eq!(
+            result,
+            "MULTIPOLYGON(((5 4096,10 4091,10 4096,5 4096)),((5 4096,0 4101,0 4096,5 4096)))"
         );
     }
 }
