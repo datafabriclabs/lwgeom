@@ -26,6 +26,8 @@ pub(crate) trait ForeignType: Sized + Send + Sync {
     }
 }
 
+pub(crate) type Opaque = PhantomData<UnsafeCell<*mut ()>>;
+
 pub(crate) trait ForeignTypeRef: Sized + Send + Sync {
     type FFIType;
 
@@ -42,5 +44,3 @@ pub(crate) trait ForeignTypeRef: Sized + Send + Sync {
         self as *const _ as _
     }
 }
-
-pub(crate) type Opaque = PhantomData<UnsafeCell<*mut ()>>;

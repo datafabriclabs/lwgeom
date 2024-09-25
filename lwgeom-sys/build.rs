@@ -147,15 +147,18 @@ fn main() {
 
         cc::Build::new()
             .cpp(true)
+            .std("c++14")
             .file(postgis_dst.join("deps/wagyu/lwgeom_wagyu.cpp"))
-            .include(&liblwgeom_dst)
             .include(postgis_dst.join("deps/wagyu/include"))
+            .include(&liblwgeom_dst)
+            .include(&proj_lib.include_paths[0])
             .compile("lwgeom_wagyu");
         cc::Build::new()
             .file(liblwgeom_dst.join("mvt.c"))
-            .include(&liblwgeom_dst)
             .include(postgis_dst.join("deps/wagyu"))
-            .flag("-Wno-unused-parameter")
+            .include(&liblwgeom_dst)
+            .include(&proj_lib.include_paths[0])
+            .warnings(false)
             .compile("lwgeom_mvt");
     }
 
