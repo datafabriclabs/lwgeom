@@ -43,7 +43,7 @@ include = [
 ]
 
 [features]
-mvt = ["cc"]
+mvt = ["dep:cc"]
 
 [build-dependencies]
 bindgen = { version = "0.70", features = ["experimental"] }
