@@ -190,8 +190,13 @@ fn main() {
         .ctypes_prefix("libc")
         .use_core()
         .wrap_static_fns(true)
+        .wrap_static_fns_path(liblwgeom_dst.join("wrap_static_fns"))
         .generate()
         .expect("Unable to generate bindings");
+
+    cc::Build::new()
+        .file(liblwgeom_dst.join("wrap_static_fns.c"))
+        .compile("wrap_static_fns");
 
     bindings
         .write_to_file(dst.join("bindings.rs"))

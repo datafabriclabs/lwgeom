@@ -1,6 +1,6 @@
 [package]
 name = "lwgeom"
-version = "0.0.10"
+version = "0.1.0"
 edition = "2021"
 authors = ["xhwhis <hi@whis.me>"]
 description = "Rust bindings for the PostGIS LWGEOM geometry library."
@@ -15,7 +15,7 @@ mvt = ["lwgeom-sys/mvt"]
 
 [dependencies]
 # workspace dependencies
-lwgeom-sys = { path = "lwgeom-sys", version = "0.0.10" }
+lwgeom-sys = { path = "lwgeom-sys", version = "0.1.0" }
 
 # crates.io dependencies
 libc.workspace = true
