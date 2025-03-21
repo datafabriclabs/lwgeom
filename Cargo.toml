@@ -1,7 +1,7 @@
 [package]
 name = "lwgeom"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 authors = ["xhwhis <hi@whis.me>"]
 description = "Rust bindings for the PostGIS LWGEOM geometry library."
 keywords = ["postgis", "geometry", "geography", "lwgeom"]
@@ -19,7 +19,7 @@ lwgeom-sys = { path = "lwgeom-sys", version = "0.1.0" }
 
 # crates.io dependencies
 libc.workspace = true
-thiserror = "1.0"
+thiserror = "2.0"
 
 [workspace.dependencies]
 libc = { version = "0.2", default-features = false }

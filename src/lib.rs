@@ -18,12 +18,18 @@ mod tests {
 
     #[test]
     fn test_split() {
-        let result = LWGeom::from_text(
-            "MULTILINESTRING((10 10,190 190), (15 15,30 30,100 90))",
-            None,
+        let result = LWGeom::from_ewkb(
+            LWGeom::from_text(
+                "MULTILINESTRING((10 10,190 190), (15 15,30 30,100 90))",
+                None,
+            )
+            .unwrap()
+            .split(&LWGeom::from_text("POINT(30 30)", None).unwrap())
+            .as_ewkb()
+            .unwrap()
+            .as_slice(),
         )
         .unwrap()
-        .split(&LWGeom::from_text("POINT(30 30)", None).unwrap())
         .as_text(None)
         .unwrap();
         assert_eq!(
@@ -57,10 +63,16 @@ mod tests {
 
     #[test]
     fn test_tile_envelope() {
-        let result = LWGeom::tile_envelope(2, 1, 1, None, None)
-            .unwrap()
-            .as_text(None)
-            .unwrap();
+        let result = LWGeom::from_ewkb(
+            LWGeom::tile_envelope(2, 1, 1, None, None)
+                .unwrap()
+                .as_ewkb()
+                .unwrap()
+                .as_slice(),
+        )
+        .unwrap()
+        .as_text(None)
+        .unwrap();
         assert_eq!(
             result,
             "POLYGON((-10018754.1713945 0,-10018754.1713945 10018754.1713945,0 10018754.1713945,0 0,-10018754.1713945 0))"
@@ -70,17 +82,23 @@ mod tests {
     #[cfg(feature = "mvt")]
     #[test]
     fn test_as_mvt_geom() {
-        let result = LWGeom::from_ewkt("POLYGON((0 0,10 0,10 5,0 -5,0 0))")
-            .unwrap()
-            .as_mvt_geom(
-                &GBox::make_box((0.0, 0.0), (4096.0, 4096.0)),
-                4096,
-                0,
-                false,
-            )
-            .unwrap()
-            .as_text(None)
-            .unwrap();
+        let result = LWGeom::from_ewkb(
+            LWGeom::from_ewkt("POLYGON((0 0,10 0,10 5,0 -5,0 0))")
+                .unwrap()
+                .as_mvt_geom(
+                    &GBox::make_box((0.0, 0.0), (4096.0, 4096.0)),
+                    4096,
+                    0,
+                    false,
+                )
+                .unwrap()
+                .as_ewkb()
+                .unwrap()
+                .as_slice(),
+        )
+        .unwrap()
+        .as_text(None)
+        .unwrap();
         assert_eq!(
             result,
             "MULTIPOLYGON(((5 4096,10 4091,10 4096,5 4096)),((5 4096,0 4101,0 4096,5 4096)))"

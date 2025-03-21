@@ -54,15 +54,15 @@ unsafe impl Sync for LWGeomRef {}
 impl LWGeom {
     pub fn from_text(wkt: &str, srid: Option<i32>) -> Result<Self> {
         let c_wkt = CString::new(wkt)?;
-        let p_parser_result = MaybeUninit::uninit().as_mut_ptr();
+        let mut parser_result: MaybeUninit<LWGEOM_PARSER_RESULT> = MaybeUninit::uninit();
         let result = unsafe {
             lwgeom_parse_wkt(
-                p_parser_result,
+                parser_result.as_mut_ptr(),
                 c_wkt.as_ptr().cast_mut(),
                 LW_PARSER_CHECK_ALL as c_int,
             )
         };
-        let mut parser_result = LWGeomParserResult::from_ptr(p_parser_result);
+        let mut parser_result = LWGeomParserResult::from_ptr(parser_result.as_mut_ptr());
         if result == LW_FAILURE as c_int {
             return Err(LWGeomError::WKTParseError(parser_result.message().ok_or(
                 LWGeomError::FailedWithoutMessageError("lwgeom_parse_wkt".to_owned()),
@@ -82,15 +82,15 @@ impl LWGeom {
 
     pub fn from_ewkt(wkt: &str) -> Result<Self> {
         let c_wkt = CString::new(wkt)?;
-        let p_parser_result = MaybeUninit::uninit().as_mut_ptr();
+        let mut parser_result: MaybeUninit<LWGEOM_PARSER_RESULT> = MaybeUninit::uninit();
         let result = unsafe {
             lwgeom_parse_wkt(
-                p_parser_result,
+                parser_result.as_mut_ptr(),
                 c_wkt.as_ptr().cast_mut(),
                 LW_PARSER_CHECK_ALL as c_int,
             )
         };
-        let mut parser_result = LWGeomParserResult::from_ptr(p_parser_result);
+        let mut parser_result = LWGeomParserResult::from_ptr(parser_result.as_mut_ptr());
         if result == LW_FAILURE as c_int {
             return Err(LWGeomError::WKTParseError(parser_result.message().ok_or(
                 LWGeomError::FailedWithoutMessageError("lwgeom_parse_wkt".to_owned()),
