@@ -8,3 +8,15 @@
 #![allow(rustdoc::bare_urls)]
 
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+
+pub const LWVARHDRSZ: usize = std::mem::size_of::<i32>();
+
+#[cfg(target_endian = "big")]
+pub fn lwsize_get(varsize: u32) -> u32 {
+    varsize & 0x3FFFFFFF
+}
+
+#[cfg(not(target_endian = "big"))]
+pub fn lwsize_get(varsize: u32) -> u32 {
+    (varsize >> 2) & 0x3FFFFFFF
+}

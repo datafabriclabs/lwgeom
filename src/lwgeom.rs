@@ -171,7 +171,7 @@ impl LWGeom {
         let ewkb_slice = unsafe {
             core::slice::from_raw_parts(
                 (*p_varlena).data.as_ptr().cast(),
-                (*p_varlena).size as usize,
+                lwsize_get((*p_varlena).size) as usize - LWVARHDRSZ,
             )
         };
         let ewkb = ewkb_slice.to_vec();

@@ -196,6 +196,7 @@ fn main() {
 
     cc::Build::new()
         .file(liblwgeom_dst.join("wrap_static_fns.c"))
+        .include(&proj_lib.include_paths[0])
         .compile("wrap_static_fns");
 
     bindings
