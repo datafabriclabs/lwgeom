@@ -1,6 +1,6 @@
 [package]
 name = "lwgeom-sys"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 authors = ["xhwhis <hi@whis.me>"]
 description = "Low-level bindings for the PostGIS LWGEOM geometry library."

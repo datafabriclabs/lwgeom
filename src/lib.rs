@@ -81,11 +81,11 @@ mod tests {
 
     #[cfg(feature = "mvt")]
     #[test]
-    fn test_as_mvt_geom() {
+    fn test_into_mvt_geom() {
         let result = LWGeom::from_ewkb(
             LWGeom::from_ewkt("POLYGON((0 0,10 0,10 5,0 -5,0 0))")
                 .unwrap()
-                .as_mvt_geom(
+                .into_mvt_geom(
                     &GBox::make_box((0.0, 0.0), (4096.0, 4096.0)),
                     4096,
                     0,
