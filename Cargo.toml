@@ -1,28 +1,42 @@
-[package]
-name = "lwgeom"
-version = "0.1.2"
+[workspace.package]
+version = "0.2.1"
 edition = "2024"
 authors = ["xhwhis <hi@whis.me>"]
-description = "Rust bindings for the PostGIS LWGEOM geometry library."
 keywords = ["postgis", "geometry", "geography", "lwgeom"]
 categories = ["api-bindings"]
-documentation = "https://docs.rs/lwgeom"
 repository = "https://github.com/datafabriclabs/lwgeom"
+
+[workspace]
+members = ["lwgeom-sys"]
+resolver = "3"
+
+[package]
+name = "lwgeom"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+keywords.workspace = true
+categories.workspace = true
+repository.workspace = true
+description = "Rust bindings for the PostGIS LWGEOM geometry library."
+documentation = "https://docs.rs/lwgeom"
 license = "Unlicense"
 
 [features]
 mvt = ["lwgeom-sys/mvt"]
 
+[workspace.dependencies]
+bindgen = { version = "0.72", features = ["experimental"] }
+cc = { version = "1.2", features = ["parallel"] }
+glob = "0.3"
+libc = { version = "0.2", default-features = false }
+pkg-config = "0.3"
+thiserror = "2.0"
+
 [dependencies]
 # workspace dependencies
-lwgeom-sys = { path = "lwgeom-sys", version = "0.1.1" }
+lwgeom-sys = { path = "lwgeom-sys", version = "0.2.1" }
 
 # crates.io dependencies
 libc.workspace = true
-thiserror = "2.0"
-
-[workspace.dependencies]
-libc = { version = "0.2", default-features = false }
-
-[workspace]
-members = ["lwgeom-sys"]
+thiserror.workspace = true

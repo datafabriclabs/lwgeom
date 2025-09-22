@@ -1,5 +1,5 @@
---- postgis/postgis/mvt.h	2024-09-12 23:58:17
-+++ mvt.h	2024-09-25 20:16:34
+--- postgis/postgis/mvt.h	2025-09-22 15:22:18.742676104 +0800
++++ mvt.h	2025-09-22 16:03:00.606282673 +0800
 @@ -25,89 +25,9 @@
  #ifndef MVT_H_
  #define MVT_H_ 1
@@ -19,7 +19,7 @@
  #include "liblwgeom.h"
 -#include "lwgeom_pg.h"
 -#include "lwgeom_log.h"
- 
+-
 -#ifdef HAVE_LIBPROTOBUF
 -
 -#include "vector_tile.pb-c.h"
@@ -76,7 +76,7 @@
 -
 -	mvt_column_cache column_cache;
 -} mvt_agg_context;
--
+ 
  /* Prototypes */
  LWGEOM *mvt_geom(LWGEOM *geom, const GBOX *bounds, uint32_t extent, uint32_t buffer, bool clip_geom);
 -void mvt_agg_init_context(mvt_agg_context *ctx);
@@ -85,8 +85,8 @@
 -bytea *mvt_ctx_serialize(mvt_agg_context *ctx);
 -mvt_agg_context * mvt_ctx_deserialize(const bytea *ba);
 -mvt_agg_context * mvt_ctx_combine(mvt_agg_context *ctx1, mvt_agg_context *ctx2);
- 
+-
 -
 -#endif  /* HAVE_LIBPROTOBUF */
--
+ 
  #endif

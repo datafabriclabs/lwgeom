@@ -1,6 +1,6 @@
---- postgis/postgis/mvt.c	2024-09-13 01:13:57
-+++ mvt.c	2024-09-25 20:16:34
-@@ -22,789 +22,50 @@
+--- postgis/postgis/mvt.c	2025-09-22 15:43:44.806075851 +0800
++++ mvt.c	2025-09-22 16:22:52.688890804 +0800
+@@ -22,751 +22,13 @@
   *
   **********************************************************************/
  
@@ -13,7 +13,6 @@
  
  #include "mvt.h"
 -#include "lwgeom_geos.h"
--#include "pgsql_compat.h"
 -
 -#ifdef HAVE_LIBPROTOBUF
 -#include "utils/jsonb.h"
@@ -25,18 +24,13 @@
 -#define uthash_free(ptr,sz) pfree(ptr)
 -/* Note: set UTHASH_FUNCTION (not HASH_FUNCTION) to change the hash function */
 -#include "uthash.h"
-+#define Max(x, y) ((x) > (y) ? (x) : (y))
- 
+-
 -#include "vector_tile.pb-c.h"
 -
 -#define FEATURES_CAPACITY_INITIAL 50
 -
 -enum mvt_cmd_id
-+/* For a given geometry, look for the highest dimensional basic type, that is,
-+ * point, line or polygon */
-+static uint8_t
-+lwgeom_get_basic_type(LWGEOM *geom)
- {
+-{
 -	CMD_MOVE_TO = 1,
 -	CMD_LINE_TO = 2,
 -	CMD_CLOSE_PATH = 7
@@ -114,8 +108,7 @@
 -{
 -	size_t new_n_tags = builder->n_tags + 2;
 -	if (new_n_tags >= builder->tags_capacity)
-+	switch(geom->type)
- 	{
+-	{
 -		size_t new_capacity = builder->tags_capacity * 2;
 -		builder->tags = repalloc(builder->tags, new_capacity * sizeof(*builder->tags));
 -		builder->tags_capacity = new_capacity;
@@ -279,20 +272,17 @@
 -
 -	switch (type)
 -	{
- 	case POINTTYPE:
+-	case POINTTYPE:
 -		return encode_point(feature, (LWPOINT*)lwgeom);
- 	case LINETYPE:
+-	case LINETYPE:
 -		return encode_line(feature, (LWLINE*)lwgeom);
- 	case POLYGONTYPE:
+-	case POLYGONTYPE:
 -		return encode_poly(feature, (LWPOLY*)lwgeom);
-+		return geom->type;
-+	case TRIANGLETYPE:
-+		return POLYGONTYPE;
- 	case MULTIPOINTTYPE:
+-	case MULTIPOINTTYPE:
 -		return encode_mpoint(feature, (LWMPOINT*)lwgeom);
- 	case MULTILINETYPE:
+-	case MULTILINETYPE:
 -		return encode_mline(feature, (LWMLINE*)lwgeom);
- 	case MULTIPOLYGONTYPE:
+-	case MULTIPOLYGONTYPE:
 -		return encode_mpoly(feature, (LWMPOLY*)lwgeom);
 -	default: elog(ERROR, "encode_feature_geometry: '%s' geometry type not supported",
 -		lwtype_name(type));
@@ -343,26 +333,17 @@
 -	ctx->column_cache.nulls = palloc(sizeof(bool) * natts);
 -
 -	for (i = 0; i < natts; i++)
-+		return geom->type - 3; /* Based on LWTYPE positions */
-+	case COLLECTIONTYPE:
-+	case TINTYPE:
- 	{
+-	{
 -		Oid typoid = getBaseType(TupleDescAttr(ctx->column_cache.tupdesc, i)->atttypid);
 -		char *tkey = TupleDescAttr(ctx->column_cache.tupdesc, i)->attname.data;
 -
 -		ctx->column_cache.column_oid[i] = typoid;
 -
 -		if (typoid == JSONBOID)
-+		uint32_t i;
-+		uint8_t type = 0;
-+		LWCOLLECTION *g = (LWCOLLECTION*)geom;
-+		for (i = 0; i < g->ngeoms; i++)
- 		{
+-		{
 -			ctx->column_cache.column_keys_index[i] = UINT32_MAX;
 -			continue;
-+			LWGEOM *sg = g->geoms[i];
-+			type = Max(type, lwgeom_get_basic_type(sg));
- 		}
+-		}
 -
 -		if (ctx->geom_name == NULL)
 -		{
@@ -394,8 +375,7 @@
 -		{
 -			ctx->column_cache.column_keys_index[i] = add_key(ctx, pstrdup(tkey));
 -		}
-+		return type;
- 	}
+-	}
 -
 -	if (!geom_found)
 -		elog(ERROR, "parse_column_keys: no geometry column found");
@@ -424,9 +404,7 @@
 -		{ \
 -			values[kv->id] = kv->value; \
 -		} \
-+	default:
-+		exit(1);
- 	}
+-	}
 -
 -static void encode_values(mvt_agg_context *ctx)
 -{
@@ -450,8 +428,8 @@
 -	ReleaseTupleDesc(ctx->column_cache.tupdesc);
 -	memset(&ctx->column_cache, 0, sizeof(ctx->column_cache));
 -
- }
- 
+-}
+-
 -#define MVT_PARSE_VALUE(hash, newvalue, size, pfvaluefield, pftype) \
 -	{ \
 -		POSTGIS_DEBUG(2, "MVT_PARSE_VALUE called"); \
@@ -474,7 +452,7 @@
 -			feature_add_property(feature, k, kv->id); \
 -		} \
 -	}
- 
+-
 -#define MVT_PARSE_INT_VALUE(value) \
 -	{ \
 -		if (value >= 0) \
@@ -773,47 +751,11 @@
 -		}
 -	}
 -}
--
--/* For a given geometry, look for the highest dimensional basic type, that is,
-- * point, line or polygon */
--static uint8_t
--lwgeom_get_basic_type(LWGEOM *geom)
--{
--	switch(geom->type)
--	{
--	case POINTTYPE:
--	case LINETYPE:
--	case POLYGONTYPE:
--		return geom->type;
--	case TRIANGLETYPE:
--		return POLYGONTYPE;
--	case MULTIPOINTTYPE:
--	case MULTILINETYPE:
--	case MULTIPOLYGONTYPE:
--		return geom->type - 3; /* Based on LWTYPE positions */
--	case COLLECTIONTYPE:
--	case TINTYPE:
--	{
--		uint32_t i;
--		uint8_t type = 0;
--		LWCOLLECTION *g = (LWCOLLECTION*)geom;
--		for (i = 0; i < g->ngeoms; i++)
--		{
--			LWGEOM *sg = g->geoms[i];
--			type = Max(type, lwgeom_get_basic_type(sg));
--		}
--		return type;
--	}
--	default:
--		elog(ERROR, "%s: Invalid type (%d)", __func__, geom->type);
--	}
--}
--
--
- /**
-  * In place process a collection to find a concrete geometry
-  * object and expose that as the actual object. Will some
-@@ -848,13 +109,11 @@
++#define Max(x, y) ((x) > (y) ? (x) : (y))
+ 
+ /* For a given geometry, look for the highest dimensional basic type, that is,
+  * point, line or polygon */
+@@ -847,13 +109,11 @@
  
  	if (!gbox_overlaps_2d(&geom_box, clip_box))
  	{
@@ -827,7 +769,7 @@
  		return lwg_in;
  	}
  
-@@ -940,7 +199,6 @@
+@@ -938,7 +198,6 @@
  	double fx, fy;
  	const uint8_t basic_type = lwgeom_get_basic_type(lwgeom);
  	int preserve_collapsed = LW_FALSE;
@@ -835,7 +777,7 @@
  
  	/* Simplify it as soon as possible */
  	lwgeom = lwgeom_to_basic_type(lwgeom, basic_type);
-@@ -983,322 +241,3 @@
+@@ -981,322 +240,3 @@
  
  	return lwgeom;
  }
@@ -966,9 +908,9 @@
 -	/* Zero features => empty bytea output */
 -	if (ctx && ctx->layer && ctx->layer->n_features == 0)
 -	{
--		ba = palloc(VARHDRSZ);
--		SET_VARSIZE(ba, VARHDRSZ);
--		return ba;
+-		bytea* ba_empty = palloc(VARHDRSZ);
+-		SET_VARSIZE(ba_empty, VARHDRSZ);
+-		return ba_empty;
 -	}
 -
 -	/* Serialize the Tile */

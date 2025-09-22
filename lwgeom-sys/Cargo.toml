@@ -1,13 +1,13 @@
 [package]
 name = "lwgeom-sys"
-version = "0.1.2"
-edition = "2021"
-authors = ["xhwhis <hi@whis.me>"]
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+keywords.workspace = true
+categories.workspace = true
+repository.workspace = true
 description = "Low-level bindings for the PostGIS LWGEOM geometry library."
-keywords = ["postgis", "geometry", "geography", "lwgeom"]
-categories = ["api-bindings"]
 documentation = "https://docs.rs/lwgeom-sys"
-repository = "https://github.com/datafabriclabs/lwgeom"
 license = "GPL-2.0-or-later"
 links = "lwgeom"
 include = [
@@ -40,16 +40,18 @@ include = [
   "/postgis/liblwgeom/Makefile.in",
   "/postgis/liblwgeom/*.h",
   "/postgis/liblwgeom/*.c",
+  "/postgis/liblwgeom/topo/*.h",
+  "/postgis/liblwgeom/topo/*.c",
 ]
 
 [features]
 mvt = []
 
 [build-dependencies]
-bindgen = { version = "0.72", features = ["experimental"] }
-cc = { version = "1.2", features = ["parallel"] }
-glob = "0.3"
-pkg-config = "0.3"
+bindgen.workspace = true
+cc.workspace = true
+glob.workspace = true
+pkg-config.workspace = true
 
 [dependencies]
 libc.workspace = true

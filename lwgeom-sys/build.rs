@@ -41,6 +41,10 @@ fn main() {
     if !liblwgeom_dst.exists() {
         std::fs::create_dir(&liblwgeom_dst).expect("failed to create directory");
     }
+    let liblwgeom_topo_dst = liblwgeom_dst.join("topo");
+    if !liblwgeom_topo_dst.exists() {
+        std::fs::create_dir(&liblwgeom_topo_dst).expect("failed to create directory");
+    }
     let ryu_dst = postgis_dst.join("deps/ryu");
     if !ryu_dst.exists() {
         std::fs::create_dir_all(&ryu_dst).expect("failed to create directory");
@@ -67,6 +71,8 @@ fn main() {
         "postgis/deps/ryu/*.c",
         "postgis/liblwgeom/*.h",
         "postgis/liblwgeom/*.c",
+        "postgis/liblwgeom/topo/*.h",
+        "postgis/liblwgeom/topo/*.c",
     ] {
         for entry in glob::glob(pattern).unwrap() {
             let path = entry.unwrap();
@@ -147,7 +153,7 @@ fn main() {
 
         cc::Build::new()
             .cpp(true)
-            .std("c++14")
+            .std("c++17")
             .file(postgis_dst.join("deps/wagyu/lwgeom_wagyu.cpp"))
             .include(postgis_dst.join("deps/wagyu/include"))
             .include(&liblwgeom_dst)
@@ -170,7 +176,7 @@ fn main() {
                 .into_owned(),
         )
         .header(
-            liblwgeom_dst
+            liblwgeom_topo_dst
                 .join("liblwgeom_topo.h")
                 .to_string_lossy()
                 .into_owned(),
@@ -186,6 +192,7 @@ fn main() {
     let builder = builder.header(liblwgeom_dst.join("mvt.h").to_string_lossy().into_owned());
 
     let bindings = builder
+        .clang_arg(format!("-I{}", liblwgeom_dst.display()))
         .clang_arg(format!("-I{}", proj_lib.include_paths[0].display()))
         .ctypes_prefix("libc")
         .use_core()
@@ -196,6 +203,7 @@ fn main() {
 
     cc::Build::new()
         .file(liblwgeom_dst.join("wrap_static_fns.c"))
+        .include(&liblwgeom_dst)
         .include(&proj_lib.include_paths[0])
         .compile("wrap_static_fns");
 

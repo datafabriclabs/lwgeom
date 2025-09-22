@@ -1,1 +1,1 @@
-#define POSTGIS_REVISION 3.3.6
+#define POSTGIS_REVISION 3.6.0

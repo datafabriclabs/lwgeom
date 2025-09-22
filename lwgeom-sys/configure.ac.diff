@@ -1,6 +1,6 @@
---- postgis/configure.ac	2024-09-13 00:04:29
-+++ configure.ac	2024-09-13 00:16:55
-@@ -1767,37 +1767,10 @@
+--- postgis/configure.ac	2025-09-22 15:43:44.686069377 +0800
++++ configure.ac	2025-09-22 15:54:15.814506014 +0800
+@@ -1915,37 +1915,10 @@
  
  dnl echo "TRANSLATIONS_MAKEFILE_LIST: ${TRANSLATIONS_MAKEFILE_LIST}"
  
@@ -32,7 +32,7 @@
 -   doc/Makefile
 -   doc/Makefile.comments
 -   $TRANSLATIONS_MAKEFILE_LIST
--   doc/html/image_src/Makefile
+-   doc/html/images/Makefile
 -   utils/Makefile
 -   $RT_MAKEFILE_LIST
 -   $DEPS_MAKEFILE_LIST])
