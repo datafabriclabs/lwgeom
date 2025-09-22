@@ -281,6 +281,10 @@ impl LWGeom {
 
         Ok(LWPoly::construct_envelope(srid, x1, y1, x2, y2).into_lwgeom())
     }
+
+    pub fn n_points(&self) -> u32 {
+        unsafe { lwgeom_count_vertices(self.as_ptr()) }
+    }
 }
 
 impl LWGeomRef {
